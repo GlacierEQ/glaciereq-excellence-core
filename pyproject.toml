@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "glaciereq-excellence-core"
+version = "0.1.0"
+description = "Shared primitives and protocol contracts for GlacierEQ excellence packs"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  { name = "casey", email = "GLACIER.EQUILIBRIUM@GMAIL.COM" }
+]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent"
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
