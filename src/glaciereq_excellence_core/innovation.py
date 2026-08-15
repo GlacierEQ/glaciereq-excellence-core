@@ -53,12 +53,80 @@ class ReliabilityContract(BaseModel):
         return all(self.model_dump().values())
 
 
+class ApexVector(BaseModel):
+    """Machine-readable APEX objective for maximum coherent advance.
+
+    Positive dimensions measure reachable system power. Penalty dimensions measure
+    incoherence that destroys usable power. APEX does not reward smallness,
+    uniformity, or immobility. It rewards the strongest non-dominated system that
+    preserves truth and can prove its function.
+    """
+
+    capability: float = Field(0.0, ge=0.0)
+    intelligence: float = Field(0.0, ge=0.0)
+    reliability: float = Field(0.0, ge=0.0)
+    leverage: float = Field(0.0, ge=0.0)
+    composability: float = Field(0.0, ge=0.0)
+    reach: float = Field(0.0, ge=0.0)
+    frontier_fitness: float = Field(0.0, ge=0.0)
+
+    fragility: float = Field(0.0, ge=0.0)
+    coordination_cost: float = Field(0.0, ge=0.0)
+    unverifiability: float = Field(0.0, ge=0.0)
+    duplication: float = Field(0.0, ge=0.0)
+
+    def utility(self) -> float:
+        gains = (
+            self.capability
+            + self.intelligence
+            + self.reliability
+            + self.leverage
+            + self.composability
+            + self.reach
+            + self.frontier_fitness
+        )
+        penalties = (
+            self.fragility
+            + self.coordination_cost
+            + self.unverifiability
+            + self.duplication
+        )
+        return gains - penalties
+
+    def dominates(self, other: "ApexVector") -> bool:
+        gain_names = (
+            "capability",
+            "intelligence",
+            "reliability",
+            "leverage",
+            "composability",
+            "reach",
+            "frontier_fitness",
+        )
+        penalty_names = (
+            "fragility",
+            "coordination_cost",
+            "unverifiability",
+            "duplication",
+        )
+
+        no_worse = all(getattr(self, name) >= getattr(other, name) for name in gain_names)
+        no_worse = no_worse and all(
+            getattr(self, name) <= getattr(other, name) for name in penalty_names
+        )
+        strictly_better = any(
+            getattr(self, name) > getattr(other, name) for name in gain_names
+        ) or any(getattr(self, name) < getattr(other, name) for name in penalty_names)
+        return no_worse and strictly_better
+
+
 class InnovationEngineState(BaseModel):
     system_id: str = Field(..., min_length=1)
     lanes: list[LanguageLane] = Field(default_factory=list)
     frontier: list[FrontierSignal] = Field(default_factory=list)
     proposals: list[InnovationProposal] = Field(default_factory=list)
     reliability: ReliabilityContract = Field(default_factory=ReliabilityContract)
+    apex: ApexVector = Field(default_factory=ApexVector)
 
     @model_validator(mode="after")
     def lanes_are_owned_once(self) -> "InnovationEngineState":
@@ -76,3 +144,13 @@ class InnovationEngineState(BaseModel):
             key=lambda signal: signal.released_at,
             reverse=True,
         )
+
+    @staticmethod
+    def apex_frontier(vectors: list[ApexVector]) -> list[ApexVector]:
+        """Return the non-dominated APEX frontier, strongest utility first."""
+        frontier = [
+            candidate
+            for candidate in vectors
+            if not any(other.dominates(candidate) for other in vectors if other is not candidate)
+        ]
+        return sorted(frontier, key=lambda vector: vector.utility(), reverse=True)
