@@ -1,21 +1,29 @@
 # GlacierEQ Excellence Core
 
-**Foundation protocol for the GlacierEQ innovation engine.**
+**Foundation protocol for the GlacierEQ APEX innovation engine.**
 
-This repository provides implementation-neutral contracts for evidence, interfaces, authority, frontier signals, language-lane ownership, bounded experimentation, and operational reliability. It is not a mandate that every downstream system be Python, inherit one base class, or copy one repository shape.
+This repository provides implementation-neutral contracts for evidence, interfaces, frontier signals, language-lane ownership, experimentation, operational reliability, and maximum coherent advance. It is not a mandate that downstream systems be Python, inherit one base class, copy one repository shape, or collapse toward the smallest governable implementation.
 
-See [`INNOVATION_ENGINE.md`](INNOVATION_ENGINE.md) for the governing engineering model.
+See [`INNOVATION_ENGINE.md`](INNOVATION_ENGINE.md) for the APEX engineering model.
+
+## APEX
+
+APEX is the controlling engineering mode: maximize coherent capability, intelligence, reliability, leverage, composability, reach, and frontier fitness while minimizing fragility, coordination cost, unverifiability, and duplication.
+
+Casey Barton is the sole human authority over GlacierEQ project direction and intended system scope. Automation, assistants, tests, receipts, merge state, and generated projections may verify facts. They may not redefine the target into a smaller system merely because the smaller system is easier to govern.
+
+`ApexVector` makes the optimization target machine-readable, and `InnovationEngineState.apex_frontier()` returns the non-dominated candidate frontier.
 
 ## What the core owns
 
 - evidence and claim receipts;
 - versioned producer/consumer envelopes;
-- authority primitives;
 - protocol compatibility;
 - language-lane ownership contracts;
-- daily frontier-signal representation;
-- bounded innovation proposals;
-- reliability promotion state.
+- frontier-signal representation;
+- innovation proposals and experiments;
+- reliability state;
+- APEX objective vectors and Pareto-frontier selection.
 
 ## What the core does **not** own
 
@@ -23,19 +31,31 @@ See [`INNOVATION_ENGINE.md`](INNOVATION_ENGINE.md) for the governing engineering
 - the number of languages in a repository;
 - one universal application framework;
 - a requirement to subclass `BaseModule` when a different runtime boundary is better;
-- technology selection that belongs to the Tower of Babel.
+- authority to reduce user intent;
+- technology selection that belongs to the Tower of Babel boundary analysis.
 
-`BaseModule` remains available for Python components that actually benefit from it. It is no longer the canonical shape of every GlacierEQ system.
+`BaseModule` remains available for Python components that actually benefit from it. It is not the universal shape of GlacierEQ systems.
 
 ## Polyglot architecture
 
-A repository may use Rust for a kernel/runtime lane, SQL for durable memory, Triton for accelerator kernels, TypeScript for a control plane, or any other justified technology combination. The requirement is not language uniformity. The requirement is **clear lane ownership, explicit interfaces, measurable advantage, and proof**.
+A repository may use Rust for a kernel/runtime lane, SQL for durable memory, Triton for accelerator kernels, TypeScript for a control plane, Julia for numerical kernels, Lean for proof, or any other justified combination. The requirement is not language uniformity. The requirement is **clear lane ownership, explicit interfaces, measurable advantage, and proof**.
 
 ```python
-from glaciereq_excellence_core import InnovationEngineState, LanguageLane
+from glaciereq_excellence_core import ApexVector, InnovationEngineState, LanguageLane
 
 state = InnovationEngineState(
     system_id="example",
+    apex=ApexVector(
+        capability=9,
+        intelligence=9,
+        reliability=9,
+        leverage=8,
+        composability=9,
+        reach=8,
+        frontier_fitness=9,
+        fragility=1,
+        coordination_cost=2,
+    ),
     lanes=[
         LanguageLane(
             lane_id="kernel",
@@ -57,25 +77,29 @@ state = InnovationEngineState(
 )
 ```
 
-## Innovation loop
+## APEX loop
 
 ```text
 OBSERVE FRONTIER
-→ MAP TO A REAL BOTTLENECK
-→ DESIGN A REVERSIBLE CANDIDATE
-→ EXPERIMENT
+→ MAP PRESSURE AND OPPORTUNITY
+→ GENERATE STRONG CANDIDATES
+→ COMPOSE BEST-FIT TECHNOLOGIES
+→ BUILD
 → MEASURE
-→ ADVERSARIAL TEST
+→ ADVERSARIALLY TEST
 → OPERATE
-→ PROMOTE OR ROLLBACK
-→ REPEAT
+→ COMPARE APEX VECTORS
+→ PRESERVE WINNER + UNIQUE PRIOR GAINS
+→ EXPAND AGAIN
 ```
 
-Experimentation is deliberately easier than promotion. New technology should be tried quickly in bounded form. Operational claims still require evidence.
+Experimentation is deliberately easier than operational promotion. New technology should be tried rapidly when it has a credible path to a stronger boundary.
+
+A small slice is a tactic, not the objective. The objective is the strongest coherent system we can actually make work.
 
 ## Reliability
 
-`ReliabilityContract.operational()` requires deterministic tests, adversarial tests, runtime observation, observability, and rollback proof. Reliability therefore means the system can evolve aggressively **without losing the ability to detect, diagnose, recover, and prove what happened**.
+`ReliabilityContract.operational()` requires deterministic tests, adversarial tests, runtime observation, observability, and rollback proof. Reliability means the system can evolve aggressively **without losing the ability to detect, diagnose, recover, preserve gains, and prove what happened**.
 
 ## Existing protocol primitives
 
@@ -90,8 +114,9 @@ The original primitives remain available:
 - `serialize()` / `deserialize()`
 - schema validation and protocol versioning
 
-The new innovation primitives are:
+The APEX innovation primitives are:
 
+- `ApexVector`
 - `LanguageLane`
 - `FrontierSignal`
 - `InnovationProposal`
@@ -110,4 +135,4 @@ pip install git+https://github.com/GlacierEQ/glaciereq-excellence-core.git
 python -m pytest -q
 ```
 
-The foundation should make stronger systems easier to build. If a rule preserves a known state by preventing justified improvement, the rule is defective.
+The foundation exists to make stronger systems easier to build. Any rule that preserves a known state by preventing justified coherent advance is defective.
