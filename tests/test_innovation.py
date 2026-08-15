@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 import pytest
 
 from glaciereq_excellence_core import (
+    ApexVector,
     FrontierSignal,
     InnovationEngineState,
     InnovationProposal,
@@ -91,3 +92,38 @@ def test_frontier_signals_are_filtered_by_release_time():
     state = InnovationEngineState(system_id="demo", frontier=[old, fresh])
     result = state.frontier_since(datetime(2026, 8, 1, tzinfo=timezone.utc))
     assert [signal.technology for signal in result] == ["fresh"]
+
+
+def test_apex_prefers_stronger_coherent_system_not_the_smallest_system():
+    small = ApexVector(
+        capability=2,
+        intelligence=2,
+        reliability=3,
+        leverage=1,
+        composability=2,
+        reach=1,
+        frontier_fitness=2,
+        fragility=1,
+        coordination_cost=1,
+    )
+    strong = ApexVector(
+        capability=9,
+        intelligence=9,
+        reliability=9,
+        leverage=9,
+        composability=9,
+        reach=9,
+        frontier_fitness=9,
+        fragility=1,
+        coordination_cost=1,
+    )
+    frontier = InnovationEngineState.apex_frontier([small, strong])
+    assert frontier == [strong]
+    assert strong.dominates(small)
+
+
+def test_apex_keeps_real_tradeoffs_on_the_frontier():
+    maximum_reach = ApexVector(capability=8, reach=10, reliability=7, coordination_cost=3)
+    maximum_reliability = ApexVector(capability=7, reach=7, reliability=10, coordination_cost=1)
+    frontier = InnovationEngineState.apex_frontier([maximum_reach, maximum_reliability])
+    assert set(map(id, frontier)) == {id(maximum_reach), id(maximum_reliability)}
