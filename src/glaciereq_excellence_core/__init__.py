@@ -4,6 +4,7 @@ from .serialization import serialize, deserialize
 from .schema import validate_payload, CLAIM_SCHEMA, ENVELOPE_SCHEMA
 from .versioning import ProtocolVersion, CURRENT_VERSION
 from .innovation import (
+    ApexVector,
     FrontierSignal,
     InnovationEngineState,
     InnovationProposal,
@@ -25,6 +26,7 @@ __all__ = [
     "ENVELOPE_SCHEMA",
     "ProtocolVersion",
     "CURRENT_VERSION",
+    "ApexVector",
     "FrontierSignal",
     "InnovationEngineState",
     "InnovationProposal",
