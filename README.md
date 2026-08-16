@@ -8,11 +8,11 @@ See [`INNOVATION_ENGINE.md`](INNOVATION_ENGINE.md) for the APEX engineering mode
 
 ## APEX
 
-APEX is the controlling engineering mode: maximize coherent capability, intelligence, reliability, leverage, composability, reach, and frontier fitness while minimizing fragility, coordination cost, unverifiability, and duplication.
+APEX is the controlling engineering mode: maximize coherent capability, intelligence, reliability, efficiency, leverage, composability, reach, and frontier fitness while minimizing fragility, coordination cost, unverifiability, and duplication.
 
 Casey Barton is the sole human authority over GlacierEQ project direction and intended system scope. Automation, assistants, tests, receipts, merge state, and generated projections may verify facts. They may not redefine the target into a smaller system merely because the smaller system is easier to govern.
 
-`ApexVector` makes the optimization target machine-readable, and `InnovationEngineState.apex_frontier()` returns the non-dominated candidate frontier.
+`ApexVector` makes the optimization target machine-readable. `InnovationEngineState.apex_frontier(vectors, weights=...)` preserves every non-dominated candidate and uses optional `ApexWeights` only to order real tradeoffs. All objective values and weights are finite and non-negative.
 
 ## What the core owns
 
@@ -23,7 +23,7 @@ Casey Barton is the sole human authority over GlacierEQ project direction and in
 - frontier-signal representation;
 - innovation proposals and experiments;
 - reliability state;
-- APEX objective vectors and Pareto-frontier selection.
+- APEX objective vectors, domain weights, and Pareto-frontier selection.
 
 ## What the core does **not** own
 
@@ -41,7 +41,12 @@ Casey Barton is the sole human authority over GlacierEQ project direction and in
 A repository may use Rust for a kernel/runtime lane, SQL for durable memory, Triton for accelerator kernels, TypeScript for a control plane, Julia for numerical kernels, Lean for proof, or any other justified combination. The requirement is not language uniformity. The requirement is **clear lane ownership, explicit interfaces, measurable advantage, and proof**.
 
 ```python
-from glaciereq_excellence_core import ApexVector, InnovationEngineState, LanguageLane
+from glaciereq_excellence_core import (
+    ApexVector,
+    ApexWeights,
+    InnovationEngineState,
+    LanguageLane,
+)
 
 state = InnovationEngineState(
     system_id="example",
@@ -49,6 +54,7 @@ state = InnovationEngineState(
         capability=9,
         intelligence=9,
         reliability=9,
+        efficiency=9,
         leverage=8,
         composability=9,
         reach=8,
@@ -75,6 +81,11 @@ state = InnovationEngineState(
         ),
     ],
 )
+
+frontier = InnovationEngineState.apex_frontier(
+    [state.apex, ApexVector(capability=10, efficiency=7, reach=10, reliability=8)],
+    weights=ApexWeights(reliability=3, efficiency=2, reach=1),
+)
 ```
 
 ## APEX loop
@@ -95,7 +106,7 @@ OBSERVE FRONTIER
 
 Experimentation is deliberately easier than operational promotion. New technology should be tried rapidly when it has a credible path to a stronger boundary.
 
-A small slice is a tactic, not the objective. The objective is the strongest coherent system we can actually make work.
+A narrow experiment is a tactic, not the objective. The objective is the strongest coherent system we can actually make work.
 
 ## Reliability
 
@@ -117,6 +128,7 @@ The original primitives remain available:
 The APEX innovation primitives are:
 
 - `ApexVector`
+- `ApexWeights`
 - `LanguageLane`
 - `FrontierSignal`
 - `InnovationProposal`
