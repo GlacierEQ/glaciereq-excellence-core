@@ -1,3 +1,5 @@
+import math
+import sys
 from datetime import datetime, timezone
 
 import pytest
@@ -144,6 +146,47 @@ def test_apex_efficiency_is_a_real_dominance_dimension():
 def test_apex_rejects_non_finite_objective_values(value: float):
     with pytest.raises(ValidationError):
         ApexVector(capability=value)
+    with pytest.raises(ValidationError):
+        ApexWeights(capability=value)
+
+
+def test_apex_rejects_finite_values_large_enough_to_overflow_weighted_math():
+    with pytest.raises(ValidationError):
+        ApexVector(capability=sys.float_info.max)
+    with pytest.raises(ValidationError):
+        ApexWeights(capability=sys.float_info.max)
+
+
+def test_maximum_accepted_apex_values_keep_utility_finite():
+    vector = ApexVector(
+        capability=1e12,
+        intelligence=1e12,
+        reliability=1e12,
+        efficiency=1e12,
+        leverage=1e12,
+        composability=1e12,
+        reach=1e12,
+        frontier_fitness=1e12,
+        fragility=1e12,
+        coordination_cost=1e12,
+        unverifiability=1e12,
+        duplication=1e12,
+    )
+    weights = ApexWeights(
+        capability=1e6,
+        intelligence=1e6,
+        reliability=1e6,
+        efficiency=1e6,
+        leverage=1e6,
+        composability=1e6,
+        reach=1e6,
+        frontier_fitness=1e6,
+        fragility=1e6,
+        coordination_cost=1e6,
+        unverifiability=1e6,
+        duplication=1e6,
+    )
+    assert math.isfinite(vector.utility(weights))
 
 
 def test_domain_weights_order_but_do_not_delete_non_dominated_tradeoffs():
