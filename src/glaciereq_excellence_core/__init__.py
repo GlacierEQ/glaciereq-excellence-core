@@ -5,6 +5,7 @@ from .schema import validate_payload, CLAIM_SCHEMA, ENVELOPE_SCHEMA
 from .versioning import ProtocolVersion, CURRENT_VERSION
 from .innovation import (
     ApexVector,
+    ApexWeights,
     FrontierSignal,
     InnovationEngineState,
     InnovationProposal,
@@ -27,6 +28,7 @@ __all__ = [
     "ProtocolVersion",
     "CURRENT_VERSION",
     "ApexVector",
+    "ApexWeights",
     "FrontierSignal",
     "InnovationEngineState",
     "InnovationProposal",
