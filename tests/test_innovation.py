@@ -1,9 +1,11 @@
 from datetime import datetime, timezone
 
 import pytest
+from pydantic import ValidationError
 
 from glaciereq_excellence_core import (
     ApexVector,
+    ApexWeights,
     FrontierSignal,
     InnovationEngineState,
     InnovationProposal,
@@ -99,6 +101,7 @@ def test_apex_prefers_stronger_coherent_system_not_the_smallest_system():
         capability=2,
         intelligence=2,
         reliability=3,
+        efficiency=2,
         leverage=1,
         composability=2,
         reach=1,
@@ -110,6 +113,7 @@ def test_apex_prefers_stronger_coherent_system_not_the_smallest_system():
         capability=9,
         intelligence=9,
         reliability=9,
+        efficiency=9,
         leverage=9,
         composability=9,
         reach=9,
@@ -127,3 +131,37 @@ def test_apex_keeps_real_tradeoffs_on_the_frontier():
     maximum_reliability = ApexVector(capability=7, reach=7, reliability=10, coordination_cost=1)
     frontier = InnovationEngineState.apex_frontier([maximum_reach, maximum_reliability])
     assert set(map(id, frontier)) == {id(maximum_reach), id(maximum_reliability)}
+
+
+def test_apex_efficiency_is_a_real_dominance_dimension():
+    inefficient = ApexVector(capability=8, reliability=8, efficiency=2)
+    efficient = ApexVector(capability=8, reliability=8, efficiency=9)
+    assert efficient.dominates(inefficient)
+    assert InnovationEngineState.apex_frontier([inefficient, efficient]) == [efficient]
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf")])
+def test_apex_rejects_non_finite_objective_values(value: float):
+    with pytest.raises(ValidationError):
+        ApexVector(capability=value)
+
+
+def test_domain_weights_order_but_do_not_delete_non_dominated_tradeoffs():
+    reach_first = ApexVector(capability=7, efficiency=6, reach=10, reliability=7)
+    efficiency_first = ApexVector(capability=7, efficiency=10, reach=6, reliability=7)
+
+    reach_weights = ApexWeights(reach=5, efficiency=1)
+    efficiency_weights = ApexWeights(reach=1, efficiency=5)
+
+    reach_order = InnovationEngineState.apex_frontier(
+        [reach_first, efficiency_first],
+        weights=reach_weights,
+    )
+    efficiency_order = InnovationEngineState.apex_frontier(
+        [reach_first, efficiency_first],
+        weights=efficiency_weights,
+    )
+
+    assert reach_order == [reach_first, efficiency_first]
+    assert efficiency_order == [efficiency_first, reach_first]
+    assert set(map(id, reach_order)) == set(map(id, efficiency_order))
