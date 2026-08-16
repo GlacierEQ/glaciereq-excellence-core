@@ -15,25 +15,44 @@ APEX optimizes the reachable system frontier, not minimum scope.
 For a candidate architecture vector `x`:
 
 ```text
-APEX(x) =
+APEX gains(x) =
   capability
 + intelligence
 + reliability
++ efficiency
 + leverage
 + composability
 + reach
 + frontier_fitness
-- fragility
-- coordination_cost
-- unverifiability
-- duplication
+
+APEX penalties(x) =
+  fragility
++ coordination_cost
++ unverifiability
++ duplication
 ```
 
-The exact weights may be specialized by domain, but the direction is invariant: maximize coherent useful power. A smaller system wins only when it actually produces the stronger APEX vector, not merely because it is smaller.
+The primary selection law is **Pareto dominance over the full vector**, not one scalar score. If one candidate is no worse on every gain and penalty dimension and strictly better on at least one, it dominates the weaker candidate. Real tradeoffs remain on the non-dominated frontier instead of being destroyed by policy.
 
-The preferred design set is the **non-dominated frontier**. When two designs represent real tradeoffs, preserve both as candidates and measure them. Do not manufacture a single answer by policy fiat.
+`ApexWeights` supplies explicit non-negative finite domain weights only to **order candidates already on that frontier**. Weights never delete a non-dominated architecture. This lets a latency-critical kernel, a memory system, and a safety-critical proof boundary value different dimensions without pretending that one estate-wide scalar can replace engineering judgment.
 
-`ApexVector` and `InnovationEngineState.apex_frontier()` make that objective executable.
+```python
+from glaciereq_excellence_core import ApexVector, ApexWeights, InnovationEngineState
+
+candidates = [
+    ApexVector(capability=9, efficiency=8, reach=10, reliability=8),
+    ApexVector(capability=9, efficiency=10, reach=7, reliability=9),
+]
+
+frontier = InnovationEngineState.apex_frontier(
+    candidates,
+    weights=ApexWeights(reliability=3, efficiency=2, reach=1),
+)
+```
+
+All objective values and weights must be finite and non-negative. `NaN`, positive infinity, and negative infinity are rejected at validation, preventing poisoned frontier ordering or fake mathematical superiority.
+
+A smaller system wins only when it actually produces the stronger APEX vector, not merely because it is smaller. Language count, repository count, code size, and architectural uniformity have **zero intrinsic score**.
 
 ## Prime directive
 
@@ -57,7 +76,7 @@ OBSERVE FRONTIER
 → EXPAND THE FRONTIER AGAIN
 ```
 
-A tiny vertical slice is permitted when it accelerates this loop. It is never the governing target.
+A narrow experiment is permitted when it accelerates this loop. It is never the governing target.
 
 ## Tower of Babel law
 
@@ -134,4 +153,4 @@ APEX rejects these failure modes:
 
 ## Core machine primitives
 
-`LanguageLane`, `FrontierSignal`, `InnovationProposal`, `ReliabilityContract`, `ApexVector`, and `InnovationEngineState` are exported so downstream systems can express APEX without inheriting an implementation language.
+`LanguageLane`, `FrontierSignal`, `InnovationProposal`, `ReliabilityContract`, `ApexVector`, `ApexWeights`, and `InnovationEngineState` are exported so downstream systems can express APEX without inheriting an implementation language.
