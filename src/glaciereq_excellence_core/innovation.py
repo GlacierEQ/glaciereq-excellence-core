@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, FiniteFloat, model_validator
 
 
 Stage = Literal["observe", "experiment", "admit", "retire"]
@@ -53,6 +53,29 @@ class ReliabilityContract(BaseModel):
         return all(self.model_dump().values())
 
 
+class ApexWeights(BaseModel):
+    """Evidence-selected utility weights used only to order the Pareto frontier.
+
+    Pareto dominance remains the primary APEX selection law. Weights never erase a
+    non-dominated candidate; they provide a transparent, domain-specific ordering
+    when an operator or experiment has supplied a reason to value one dimension
+    more strongly than another.
+    """
+
+    capability: FiniteFloat = Field(1.0, ge=0.0)
+    intelligence: FiniteFloat = Field(1.0, ge=0.0)
+    reliability: FiniteFloat = Field(1.0, ge=0.0)
+    efficiency: FiniteFloat = Field(1.0, ge=0.0)
+    leverage: FiniteFloat = Field(1.0, ge=0.0)
+    composability: FiniteFloat = Field(1.0, ge=0.0)
+    reach: FiniteFloat = Field(1.0, ge=0.0)
+    frontier_fitness: FiniteFloat = Field(1.0, ge=0.0)
+    fragility: FiniteFloat = Field(1.0, ge=0.0)
+    coordination_cost: FiniteFloat = Field(1.0, ge=0.0)
+    unverifiability: FiniteFloat = Field(1.0, ge=0.0)
+    duplication: FiniteFloat = Field(1.0, ge=0.0)
+
+
 class ApexVector(BaseModel):
     """Machine-readable APEX objective for maximum coherent advance.
 
@@ -62,61 +85,63 @@ class ApexVector(BaseModel):
     preserves truth and can prove its function.
     """
 
-    capability: float = Field(0.0, ge=0.0)
-    intelligence: float = Field(0.0, ge=0.0)
-    reliability: float = Field(0.0, ge=0.0)
-    leverage: float = Field(0.0, ge=0.0)
-    composability: float = Field(0.0, ge=0.0)
-    reach: float = Field(0.0, ge=0.0)
-    frontier_fitness: float = Field(0.0, ge=0.0)
+    capability: FiniteFloat = Field(0.0, ge=0.0)
+    intelligence: FiniteFloat = Field(0.0, ge=0.0)
+    reliability: FiniteFloat = Field(0.0, ge=0.0)
+    efficiency: FiniteFloat = Field(0.0, ge=0.0)
+    leverage: FiniteFloat = Field(0.0, ge=0.0)
+    composability: FiniteFloat = Field(0.0, ge=0.0)
+    reach: FiniteFloat = Field(0.0, ge=0.0)
+    frontier_fitness: FiniteFloat = Field(0.0, ge=0.0)
 
-    fragility: float = Field(0.0, ge=0.0)
-    coordination_cost: float = Field(0.0, ge=0.0)
-    unverifiability: float = Field(0.0, ge=0.0)
-    duplication: float = Field(0.0, ge=0.0)
+    fragility: FiniteFloat = Field(0.0, ge=0.0)
+    coordination_cost: FiniteFloat = Field(0.0, ge=0.0)
+    unverifiability: FiniteFloat = Field(0.0, ge=0.0)
+    duplication: FiniteFloat = Field(0.0, ge=0.0)
 
-    def utility(self) -> float:
-        gains = (
-            self.capability
-            + self.intelligence
-            + self.reliability
-            + self.leverage
-            + self.composability
-            + self.reach
-            + self.frontier_fitness
+    _GAIN_NAMES = (
+        "capability",
+        "intelligence",
+        "reliability",
+        "efficiency",
+        "leverage",
+        "composability",
+        "reach",
+        "frontier_fitness",
+    )
+    _PENALTY_NAMES = (
+        "fragility",
+        "coordination_cost",
+        "unverifiability",
+        "duplication",
+    )
+
+    def utility(self, weights: ApexWeights | None = None) -> float:
+        """Return a transparent weighted ordering score for frontier candidates."""
+        selected = weights or ApexWeights()
+        gains = sum(
+            float(getattr(self, name)) * float(getattr(selected, name))
+            for name in self._GAIN_NAMES
         )
-        penalties = (
-            self.fragility
-            + self.coordination_cost
-            + self.unverifiability
-            + self.duplication
+        penalties = sum(
+            float(getattr(self, name)) * float(getattr(selected, name))
+            for name in self._PENALTY_NAMES
         )
         return gains - penalties
 
     def dominates(self, other: "ApexVector") -> bool:
-        gain_names = (
-            "capability",
-            "intelligence",
-            "reliability",
-            "leverage",
-            "composability",
-            "reach",
-            "frontier_fitness",
+        """Return true only when this vector is Pareto-superior to ``other``."""
+        no_worse = all(
+            getattr(self, name) >= getattr(other, name) for name in self._GAIN_NAMES
         )
-        penalty_names = (
-            "fragility",
-            "coordination_cost",
-            "unverifiability",
-            "duplication",
-        )
-
-        no_worse = all(getattr(self, name) >= getattr(other, name) for name in gain_names)
         no_worse = no_worse and all(
-            getattr(self, name) <= getattr(other, name) for name in penalty_names
+            getattr(self, name) <= getattr(other, name) for name in self._PENALTY_NAMES
         )
         strictly_better = any(
-            getattr(self, name) > getattr(other, name) for name in gain_names
-        ) or any(getattr(self, name) < getattr(other, name) for name in penalty_names)
+            getattr(self, name) > getattr(other, name) for name in self._GAIN_NAMES
+        ) or any(
+            getattr(self, name) < getattr(other, name) for name in self._PENALTY_NAMES
+        )
         return no_worse and strictly_better
 
 
@@ -146,11 +171,18 @@ class InnovationEngineState(BaseModel):
         )
 
     @staticmethod
-    def apex_frontier(vectors: list[ApexVector]) -> list[ApexVector]:
-        """Return the non-dominated APEX frontier, strongest utility first."""
+    def apex_frontier(
+        vectors: list[ApexVector],
+        weights: ApexWeights | None = None,
+    ) -> list[ApexVector]:
+        """Return every non-dominated candidate, ordered by declared utility."""
         frontier = [
             candidate
             for candidate in vectors
             if not any(other.dominates(candidate) for other in vectors if other is not candidate)
         ]
-        return sorted(frontier, key=lambda vector: vector.utility(), reverse=True)
+        return sorted(
+            frontier,
+            key=lambda vector: vector.utility(weights),
+            reverse=True,
+        )
