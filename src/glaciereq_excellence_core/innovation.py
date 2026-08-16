@@ -7,6 +7,8 @@ from pydantic import BaseModel, Field, FiniteFloat, model_validator
 
 
 Stage = Literal["observe", "experiment", "admit", "retire"]
+MAX_APEX_VALUE = 1_000_000_000_000.0
+MAX_APEX_WEIGHT = 1_000_000.0
 
 
 class LanguageLane(BaseModel):
@@ -54,26 +56,25 @@ class ReliabilityContract(BaseModel):
 
 
 class ApexWeights(BaseModel):
-    """Evidence-selected utility weights used only to order the Pareto frontier.
+    """Evidence-selected weights used only to order the Pareto frontier.
 
-    Pareto dominance remains the primary APEX selection law. Weights never erase a
-    non-dominated candidate; they provide a transparent, domain-specific ordering
-    when an operator or experiment has supplied a reason to value one dimension
-    more strongly than another.
+    Values are finite, non-negative, and bounded so every accepted weighted utility
+    calculation is guaranteed to remain finite with accepted ``ApexVector`` values.
+    Pareto dominance remains primary: weights never delete a non-dominated design.
     """
 
-    capability: FiniteFloat = Field(1.0, ge=0.0)
-    intelligence: FiniteFloat = Field(1.0, ge=0.0)
-    reliability: FiniteFloat = Field(1.0, ge=0.0)
-    efficiency: FiniteFloat = Field(1.0, ge=0.0)
-    leverage: FiniteFloat = Field(1.0, ge=0.0)
-    composability: FiniteFloat = Field(1.0, ge=0.0)
-    reach: FiniteFloat = Field(1.0, ge=0.0)
-    frontier_fitness: FiniteFloat = Field(1.0, ge=0.0)
-    fragility: FiniteFloat = Field(1.0, ge=0.0)
-    coordination_cost: FiniteFloat = Field(1.0, ge=0.0)
-    unverifiability: FiniteFloat = Field(1.0, ge=0.0)
-    duplication: FiniteFloat = Field(1.0, ge=0.0)
+    capability: FiniteFloat = Field(1.0, ge=0.0, le=MAX_APEX_WEIGHT)
+    intelligence: FiniteFloat = Field(1.0, ge=0.0, le=MAX_APEX_WEIGHT)
+    reliability: FiniteFloat = Field(1.0, ge=0.0, le=MAX_APEX_WEIGHT)
+    efficiency: FiniteFloat = Field(1.0, ge=0.0, le=MAX_APEX_WEIGHT)
+    leverage: FiniteFloat = Field(1.0, ge=0.0, le=MAX_APEX_WEIGHT)
+    composability: FiniteFloat = Field(1.0, ge=0.0, le=MAX_APEX_WEIGHT)
+    reach: FiniteFloat = Field(1.0, ge=0.0, le=MAX_APEX_WEIGHT)
+    frontier_fitness: FiniteFloat = Field(1.0, ge=0.0, le=MAX_APEX_WEIGHT)
+    fragility: FiniteFloat = Field(1.0, ge=0.0, le=MAX_APEX_WEIGHT)
+    coordination_cost: FiniteFloat = Field(1.0, ge=0.0, le=MAX_APEX_WEIGHT)
+    unverifiability: FiniteFloat = Field(1.0, ge=0.0, le=MAX_APEX_WEIGHT)
+    duplication: FiniteFloat = Field(1.0, ge=0.0, le=MAX_APEX_WEIGHT)
 
 
 class ApexVector(BaseModel):
@@ -102,22 +103,22 @@ class ApexVector(BaseModel):
         "duplication",
     )
 
-    capability: FiniteFloat = Field(0.0, ge=0.0)
-    intelligence: FiniteFloat = Field(0.0, ge=0.0)
-    reliability: FiniteFloat = Field(0.0, ge=0.0)
-    efficiency: FiniteFloat = Field(0.0, ge=0.0)
-    leverage: FiniteFloat = Field(0.0, ge=0.0)
-    composability: FiniteFloat = Field(0.0, ge=0.0)
-    reach: FiniteFloat = Field(0.0, ge=0.0)
-    frontier_fitness: FiniteFloat = Field(0.0, ge=0.0)
+    capability: FiniteFloat = Field(0.0, ge=0.0, le=MAX_APEX_VALUE)
+    intelligence: FiniteFloat = Field(0.0, ge=0.0, le=MAX_APEX_VALUE)
+    reliability: FiniteFloat = Field(0.0, ge=0.0, le=MAX_APEX_VALUE)
+    efficiency: FiniteFloat = Field(0.0, ge=0.0, le=MAX_APEX_VALUE)
+    leverage: FiniteFloat = Field(0.0, ge=0.0, le=MAX_APEX_VALUE)
+    composability: FiniteFloat = Field(0.0, ge=0.0, le=MAX_APEX_VALUE)
+    reach: FiniteFloat = Field(0.0, ge=0.0, le=MAX_APEX_VALUE)
+    frontier_fitness: FiniteFloat = Field(0.0, ge=0.0, le=MAX_APEX_VALUE)
 
-    fragility: FiniteFloat = Field(0.0, ge=0.0)
-    coordination_cost: FiniteFloat = Field(0.0, ge=0.0)
-    unverifiability: FiniteFloat = Field(0.0, ge=0.0)
-    duplication: FiniteFloat = Field(0.0, ge=0.0)
+    fragility: FiniteFloat = Field(0.0, ge=0.0, le=MAX_APEX_VALUE)
+    coordination_cost: FiniteFloat = Field(0.0, ge=0.0, le=MAX_APEX_VALUE)
+    unverifiability: FiniteFloat = Field(0.0, ge=0.0, le=MAX_APEX_VALUE)
+    duplication: FiniteFloat = Field(0.0, ge=0.0, le=MAX_APEX_VALUE)
 
     def utility(self, weights: ApexWeights | None = None) -> float:
-        """Return a transparent weighted ordering score for frontier candidates."""
+        """Return a guaranteed-finite weighted ordering score."""
         selected = weights or ApexWeights()
         gains = sum(
             float(getattr(self, name)) * float(getattr(selected, name))
