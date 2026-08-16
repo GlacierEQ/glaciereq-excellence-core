@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Literal
+from typing import ClassVar, Literal
 
 from pydantic import BaseModel, Field, FiniteFloat, model_validator
 
@@ -85,6 +85,23 @@ class ApexVector(BaseModel):
     preserves truth and can prove its function.
     """
 
+    GAIN_NAMES: ClassVar[tuple[str, ...]] = (
+        "capability",
+        "intelligence",
+        "reliability",
+        "efficiency",
+        "leverage",
+        "composability",
+        "reach",
+        "frontier_fitness",
+    )
+    PENALTY_NAMES: ClassVar[tuple[str, ...]] = (
+        "fragility",
+        "coordination_cost",
+        "unverifiability",
+        "duplication",
+    )
+
     capability: FiniteFloat = Field(0.0, ge=0.0)
     intelligence: FiniteFloat = Field(0.0, ge=0.0)
     reliability: FiniteFloat = Field(0.0, ge=0.0)
@@ -99,48 +116,31 @@ class ApexVector(BaseModel):
     unverifiability: FiniteFloat = Field(0.0, ge=0.0)
     duplication: FiniteFloat = Field(0.0, ge=0.0)
 
-    _GAIN_NAMES = (
-        "capability",
-        "intelligence",
-        "reliability",
-        "efficiency",
-        "leverage",
-        "composability",
-        "reach",
-        "frontier_fitness",
-    )
-    _PENALTY_NAMES = (
-        "fragility",
-        "coordination_cost",
-        "unverifiability",
-        "duplication",
-    )
-
     def utility(self, weights: ApexWeights | None = None) -> float:
         """Return a transparent weighted ordering score for frontier candidates."""
         selected = weights or ApexWeights()
         gains = sum(
             float(getattr(self, name)) * float(getattr(selected, name))
-            for name in self._GAIN_NAMES
+            for name in self.GAIN_NAMES
         )
         penalties = sum(
             float(getattr(self, name)) * float(getattr(selected, name))
-            for name in self._PENALTY_NAMES
+            for name in self.PENALTY_NAMES
         )
         return gains - penalties
 
     def dominates(self, other: "ApexVector") -> bool:
         """Return true only when this vector is Pareto-superior to ``other``."""
         no_worse = all(
-            getattr(self, name) >= getattr(other, name) for name in self._GAIN_NAMES
+            getattr(self, name) >= getattr(other, name) for name in self.GAIN_NAMES
         )
         no_worse = no_worse and all(
-            getattr(self, name) <= getattr(other, name) for name in self._PENALTY_NAMES
+            getattr(self, name) <= getattr(other, name) for name in self.PENALTY_NAMES
         )
         strictly_better = any(
-            getattr(self, name) > getattr(other, name) for name in self._GAIN_NAMES
+            getattr(self, name) > getattr(other, name) for name in self.GAIN_NAMES
         ) or any(
-            getattr(self, name) < getattr(other, name) for name in self._PENALTY_NAMES
+            getattr(self, name) < getattr(other, name) for name in self.PENALTY_NAMES
         )
         return no_worse and strictly_better
 
