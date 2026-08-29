@@ -1,0 +1,16 @@
+LICENSE
+README.md
+pyproject.toml
+src/glaciereq_excellence_core/__init__.py
+src/glaciereq_excellence_core/base.py
+src/glaciereq_excellence_core/example_module.py
+src/glaciereq_excellence_core/models.py
+src/glaciereq_excellence_core/schema.py
+src/glaciereq_excellence_core/serialization.py
+src/glaciereq_excellence_core/versioning.py
+src/glaciereq_excellence_core.egg-info/PKG-INFO
+src/glaciereq_excellence_core.egg-info/SOURCES.txt
+src/glaciereq_excellence_core.egg-info/dependency_links.txt
+src/glaciereq_excellence_core.egg-info/requires.txt
+src/glaciereq_excellence_core.egg-info/top_level.txt
+tests/test_core.py
